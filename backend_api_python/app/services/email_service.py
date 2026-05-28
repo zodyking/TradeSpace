@@ -39,6 +39,7 @@ class EmailService:
         self.smtp_user = os.getenv('SMTP_USER', '')
         self.smtp_password = os.getenv('SMTP_PASSWORD', '')
         self.smtp_from = os.getenv('SMTP_FROM', '') or self.smtp_user
+        self.smtp_from_name = os.getenv('SMTP_FROM_NAME', '').strip()
         self.smtp_use_tls = os.getenv('SMTP_USE_TLS', 'true').lower() == 'true'
         self.smtp_use_ssl = os.getenv('SMTP_USE_SSL', 'false').lower() == 'true'
         

@@ -829,6 +829,13 @@ CONFIG_SCHEMA = {
                 'description': 'Email sender address (From header)'
             },
             {
+                'key': 'SMTP_FROM_NAME',
+                'label': 'Sender Display Name',
+                'type': 'text',
+                'required': False,
+                'description': 'Friendly From name (e.g. Devon Onsite Repairs Inc)'
+            },
+            {
                 'key': 'SMTP_USE_TLS',
                 'label': 'Use TLS',
                 'type': 'boolean',
