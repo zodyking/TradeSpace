@@ -19,12 +19,10 @@ _email_service = None
 
 
 def get_email_service():
-    """Get singleton EmailService instance (reloads config each call for hot settings)."""
+    """Get singleton EmailService instance"""
     global _email_service
     if _email_service is None:
         _email_service = EmailService()
-    else:
-        _email_service._load_config()
     return _email_service
 
 

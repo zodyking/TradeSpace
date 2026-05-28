@@ -50,19 +50,6 @@ if [ "$CURRENT_SECRET" = "$DEFAULT_SECRET" ]; then
 fi
 
 echo "[OK] SECRET_KEY is configured"
-
-# Load /app/.env into this shell so early diagnostics see SMTP_* (gunicorn also loads via run.py).
-if [ -f /app/.env ]; then
-    set -a
-    # shellcheck disable=SC1091
-    . /app/.env 2>/dev/null || true
-    set +a
-    if [ -n "$SMTP_HOST" ] && [ -n "$SMTP_USER" ] && [ -n "$SMTP_PASSWORD" ]; then
-        echo "[OK] SMTP configured (host=$SMTP_HOST)"
-    else
-        echo "[WARN] SMTP not set in /app/.env — use Admin Settings → Email or backend.env.dockploy"
-    fi
-fi
 echo ""
 
 # Start the application

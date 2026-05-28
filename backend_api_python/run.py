@@ -24,10 +24,6 @@ try:
     # Fallback: repo-root/.env (one level up) for users who place .env at workspace root.
     parent_dir = os.path.dirname(this_dir)
     load_dotenv(os.path.join(parent_dir, ".env"), override=False)
-    # Docker / Dockploy: bind-mounted backend.env.dockploy → /app/.env
-    docker_env = "/app/.env"
-    if os.path.isfile(docker_env):
-        load_dotenv(docker_env, override=True)
 except Exception:
     # python-dotenv is optional; environment variables can still be provided by the OS.
     pass

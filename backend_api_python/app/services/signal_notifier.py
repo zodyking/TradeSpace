@@ -1049,11 +1049,7 @@ class SignalNotifier:
             return False, "missing_SMTP_FROM"
 
         msg = EmailMessage()
-        msg["From"] = (
-            formataddr((self.smtp_from_name, self.smtp_from))
-            if self.smtp_from_name
-            else self.smtp_from
-        )
+        msg["From"] = self.smtp_from
         msg["To"] = to_email
         msg["Subject"] = str(subject or "Signal")
         msg.set_content(str(body_text or ""))
