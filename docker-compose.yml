@@ -49,8 +49,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend_api_python/migrations/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    # Host 5433 avoids :5432 conflicts. Dockploy: use docker-compose.dockploy.yml (no host publish).
     ports:
-      - "${DB_PORT:-127.0.0.1:5432}:5432"
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
     networks:
       - quantdinger-network
     healthcheck:
@@ -157,8 +158,6 @@ services:
     pull_policy: always
     container_name: quantdinger-frontend
     restart: unless-stopped
-    expose:
-      - "80"
     ports:
       - "${FRONTEND_PORT:-8888}:80"
     environment:

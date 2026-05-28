@@ -1,13 +1,8 @@
-# Dockploy / Dokploy overlay
-#
-# Required project env:
+# Dockploy / Dokploy — required overlay (set COMPOSE_FILE in project env).
 #   COMPOSE_FILE=docker-compose.yml:docker-compose.dockploy.yml
 #
-# Domain UI: service=frontend, container port=80, path=/
-# sslip.io: HTTPS OFF — open http://your-host.sslip.io (not https://)
-#
-# backend_api_python/.env:
-#   FRONTEND_URL=http://your-host.sslip.io
+# Set QD_PUBLIC_HOST to your domain (sslip.io = HTTP only, HTTPS off in UI).
+# Set FRONTEND_URL in backend_api_python/.env to http://${QD_PUBLIC_HOST}
 
 services:
   postgres:
@@ -33,9 +28,11 @@ services:
       - dokploy-network
     labels:
       - traefik.enable=true
-      # Traefik only watches dokploy-network; without this label → 404
-      - traefik.docker.network=dokploy-network
-      - traefik.http.services.quantdinger-fe.loadbalancer.server.port=80
+      - traefik.docker.network=${TRAEFIK_DOCKER_NETWORK:-dokploy-network}
+      - traefik.http.routers.qd-web.rule=Host(`${QD_PUBLIC_HOST:?set QD_PUBLIC_HOST to your domain}`)
+      - traefik.http.routers.qd-web.entrypoints=web
+      - traefik.http.routers.qd-web.service=qd-web
+      - traefik.http.services.qd-web.loadbalancer.server.port=80
 
 networks:
   dokploy-network:
