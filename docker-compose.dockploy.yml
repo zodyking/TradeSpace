@@ -1,39 +1,116 @@
-# Dockploy / Dokploy — required overlay (set COMPOSE_FILE in project env).
-#   COMPOSE_FILE=docker-compose.yml:docker-compose.dockploy.yml
-#
-# Set QD_PUBLIC_HOST to your domain (sslip.io = HTTP only, HTTPS off in UI).
-# Set FRONTEND_URL in backend_api_python/.env to http://${QD_PUBLIC_HOST}
+# =============================================================================
+# QuantDinger — Dockploy / Dokploy (standalone compose file)
+# =============================================================================
+# In Dockploy → Compose path / file:  docker-compose.dockploy.yml
+# Open: http://qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io
+# Do NOT use https:// on sslip.io. Turn HTTPS OFF in Dockploy Domains UI.
+# =============================================================================
 
 services:
   postgres:
-    ports: !reset []
+    image: ${IMAGE_PREFIX:-}postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quantdinger}
+      POSTGRES_USER: ${POSTGRES_USER:-quantdinger}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quantdinger123}
+      TZ: ${TZ:-Asia/Shanghai}
+    command:
+      - postgres
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS:-150}
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS:-256MB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - quantdinger-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-quantdinger} -d ${POSTGRES_DB:-quantdinger}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
-    ports: !reset []
+    image: ${IMAGE_PREFIX:-}redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    networks:
+      - quantdinger-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
-    ports: !reset []
+    image: ${BACKEND_IMAGE:-ghcr.io/brokermr810/quantdinger-backend}:${BACKEND_TAG:-${IMAGE_TAG:-latest}}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - backend_logs:/app/logs
+      - backend_data:/app/data
+      - ./backend.env.dockploy:/app/.env
+    environment:
+      - PYTHON_API_HOST=0.0.0.0
+      - PYTHON_API_PORT=5000
+      - TZ=${TZ:-Asia/Shanghai}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-quantdinger}:${POSTGRES_PASSWORD:-quantdinger123}@postgres:5432/${POSTGRES_DB:-quantdinger}
+      - DB_TYPE=postgresql
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_ENABLED=true
+      - FRONTEND_URL=${FRONTEND_URL:-http://qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io}
+      - ALLOW_LOCAL_DESKTOP_BROKERS=false
     networks:
       - quantdinger-network
       - dokploy-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   frontend:
-    ports: !reset []
+    image: ${FRONTEND_IMAGE:-ghcr.io/brokermr810/quantdinger-frontend}:${FRONTEND_TAG:-${IMAGE_TAG:-latest}}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     expose:
       - "80"
     environment:
-      - BACKEND_URL=${BACKEND_URL:-http://backend:5000}
+      - BACKEND_URL=http://backend:5000
     networks:
       - quantdinger-network
       - dokploy-network
     labels:
       - traefik.enable=true
-      - traefik.docker.network=${TRAEFIK_DOCKER_NETWORK:-dokploy-network}
-      - traefik.http.routers.qd-web.rule=Host(`${QD_PUBLIC_HOST:?set QD_PUBLIC_HOST to your domain}`)
-      - traefik.http.routers.qd-web.entrypoints=web
-      - traefik.http.routers.qd-web.service=qd-web
-      - traefik.http.services.qd-web.loadbalancer.server.port=80
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.quantdinger-http.rule=Host(`qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io`)
+      - traefik.http.routers.quantdinger-http.entrypoints=web
+      - traefik.http.routers.quantdinger-http.service=quantdinger-http
+      - traefik.http.services.quantdinger-http.loadbalancer.server.port=80
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  backend_logs:
+  backend_data:
 
 networks:
+  quantdinger-network:
+    driver: bridge
   dokploy-network:
     external: true
