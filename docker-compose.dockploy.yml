@@ -46,14 +46,22 @@ services:
       retries: 5
 
   backend:
+    build:
+      context: ./backend_api_python
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ${IMAGE_PREFIX:-}python:3.12-slim-bookworm
+        BUILD_REGION: ${BUILD_REGION:-global}
     image: ${BACKEND_IMAGE:-ghcr.io/brokermr810/quantdinger-backend}:${BACKEND_TAG:-${IMAGE_TAG:-latest}}
-    pull_policy: always
+    pull_policy: build
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - backend.env.dockploy
     volumes:
       - backend_logs:/app/logs
       - backend_data:/app/data
@@ -69,6 +77,9 @@ services:
       - CACHE_ENABLED=true
       - FRONTEND_URL=http://qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io
       - ALLOW_LOCAL_DESKTOP_BROKERS=false
+      - ADMIN_USER=quantdinger
+      - ADMIN_PASSWORD=123456
+      - SYNC_ADMIN_PASSWORD_ON_START=true
     networks:
       - dokploy-network
     healthcheck:

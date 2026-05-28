@@ -19,11 +19,15 @@ except Exception:
 try:
     from dotenv import load_dotenv
     this_dir = os.path.dirname(os.path.abspath(__file__))
-    # Primary: backend_api_python/.env (same dir as run.py)
-    load_dotenv(os.path.join(this_dir, ".env"), override=False)
+    env_path = os.path.join(this_dir, ".env")
+    # Primary: backend_api_python/.env (or Docker bind-mount at /app/.env)
+    load_dotenv(env_path, override=False)
     # Fallback: repo-root/.env (one level up) for users who place .env at workspace root.
     parent_dir = os.path.dirname(this_dir)
     load_dotenv(os.path.join(parent_dir, ".env"), override=False)
+    # Bind-mounted .env must override empty container defaults (Dockploy / Docker)
+    if os.path.isfile(env_path):
+        load_dotenv(env_path, override=True)
 except Exception:
     # python-dotenv is optional; environment variables can still be provided by the OS.
     pass

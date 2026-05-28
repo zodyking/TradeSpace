@@ -659,22 +659,24 @@ class UserService:
     
     def ensure_admin_exists(self):
         """
-        Ensure at least one admin user exists.
-        Creates admin using ADMIN_USER/ADMIN_PASSWORD from env if no users exist.
-        """
-        try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                cur.execute("SELECT COUNT(*) as count FROM qd_users")
-                count = cur.fetchone()['count']
-                cur.close()
-                
-                if count == 0:
-                    # Create admin using env credentials
-                    admin_user = os.getenv('ADMIN_USER', 'admin')
-                    admin_password = os.getenv('ADMIN_PASSWORD', 'admin123')
-                    admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+        Ensure the configured admin account exists and matches ADMIN_PASSWORD from env.
 
+        Reused Postgres volumes may already contain users while README defaults
+        (quantdinger / 123456) were never applied. Always ensure ADMIN_USER exists
+        and optionally sync its password on startup.
+        """
+        from app.config.settings import Config
+
+        admin_user = (Config.ADMIN_USER or 'quantdinger').strip()
+        admin_password = Config.ADMIN_PASSWORD or '123456'
+        admin_email = (os.getenv('ADMIN_EMAIL') or 'admin@example.com').strip() or None
+        sync_password = os.getenv('SYNC_ADMIN_PASSWORD_ON_START', 'true').lower() == 'true'
+
+        try:
+            user = self.get_user_by_username(admin_user)
+
+            if user is None:
+                try:
                     self.create_user({
                         'username': admin_user,
                         'password': admin_password,
@@ -682,9 +684,26 @@ class UserService:
                         'nickname': 'Administrator',
                         'role': 'admin',
                         'status': 'active',
-                        'email_verified': True  # Admin email is pre-verified
+                        'email_verified': True,
                     })
-                    logger.info(f"Created admin user: {admin_user} ({admin_email})")
+                    logger.info(f"Created admin user: {admin_user}")
+                    return
+                except ValueError as exc:
+                    if 'already exists' not in str(exc).lower():
+                        raise
+                    user = self.get_user_by_username(admin_user)
+
+            if not user:
+                return
+
+            if user.get('role') != 'admin' or user.get('status') != 'active':
+                self.update_user(user['id'], {'role': 'admin', 'status': 'active'})
+
+            if sync_password and admin_password:
+                password_hash = (user.get('password_hash') or '').strip()
+                if not password_hash or not self.verify_password(admin_password, password_hash):
+                    self.reset_password(user['id'], admin_password)
+                    logger.info(f"Synced admin password for {admin_user} from environment")
         except Exception as e:
             logger.error(f"ensure_admin_exists failed: {e}")
 
