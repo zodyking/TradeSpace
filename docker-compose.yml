@@ -50,7 +50,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend_api_python/migrations/init.sql:/docker-entrypoint-initdb.d/01-init.sql
     ports:
-      - "${POSTGRES_HOST_PORT:-5433}:5432"
+      - "${DB_PORT:-127.0.0.1:5432}:5432"
     networks:
       - quantdinger-network
     healthcheck:
@@ -157,6 +157,8 @@ services:
     pull_policy: always
     container_name: quantdinger-frontend
     restart: unless-stopped
+    expose:
+      - "80"
     ports:
       - "${FRONTEND_PORT:-8888}:80"
     environment:
