@@ -1,0 +1,41 @@
+# Dockploy / Dokploy overlay
+#
+# In Dockploy → Compose settings, set:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.dockploy.yml
+# Or deploy with:
+#   docker compose -f docker-compose.yml -f docker-compose.dockploy.yml up -d
+# GHCR-only stack:
+#   docker compose -f docker-compose.ghcr.yml -f docker-compose.dockploy.yml up -d
+#
+# Domain form (sslip.io or any host):
+#   Service: frontend | Container port: 80 | Path: / | HTTPS: off for sslip.io
+#
+# Set the same origin in backend_api_python/.env:
+#   FRONTEND_URL=http://<your-host>   (https:// only when TLS terminates in front)
+
+services:
+  postgres:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  backend:
+    ports: !reset []
+    networks:
+      - quantdinger-network
+      - dokploy-network
+
+  frontend:
+    ports: !reset []
+    expose:
+      - "80"
+    environment:
+      - BACKEND_URL=${BACKEND_URL:-http://backend:5000}
+    networks:
+      - quantdinger-network
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
