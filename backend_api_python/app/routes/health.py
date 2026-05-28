@@ -22,8 +22,14 @@ def index():
 @health_bp.route('/health', methods=['GET'])
 def health_check():
     """健康检查"""
+    try:
+        from app.services.email_service import get_email_service
+        email_ok = get_email_service().is_configured()
+    except Exception:
+        email_ok = False
     return jsonify({
         'status': 'healthy',
+        'email_configured': email_ok,
         'timestamp': datetime.now(timezone.utc)
     })
 

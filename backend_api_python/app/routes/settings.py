@@ -829,13 +829,6 @@ CONFIG_SCHEMA = {
                 'description': 'Email sender address (From header)'
             },
             {
-                'key': 'SMTP_FROM_NAME',
-                'label': 'Sender Display Name',
-                'type': 'text',
-                'required': False,
-                'description': 'Friendly From name (e.g. Devon Onsite Repairs Inc)'
-            },
-            {
                 'key': 'SMTP_USE_TLS',
                 'label': 'Use TLS',
                 'type': 'boolean',
@@ -1627,6 +1620,9 @@ def save_settings():
                     
                     # 空值处理
                     if new_value is None or new_value == '':
+                        # Password fields: empty means "leave unchanged" (UI does not resend secrets)
+                        if item.get('type') == 'password':
+                            continue
                         if not item.get('required', True):
                             updates[key] = ''
                     else:

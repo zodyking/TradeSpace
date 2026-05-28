@@ -19,10 +19,12 @@ _email_service = None
 
 
 def get_email_service():
-    """Get singleton EmailService instance"""
+    """Get singleton EmailService instance (reloads config each call for hot settings)."""
     global _email_service
     if _email_service is None:
         _email_service = EmailService()
+    else:
+        _email_service._load_config()
     return _email_service
 
 
@@ -39,7 +41,6 @@ class EmailService:
         self.smtp_user = os.getenv('SMTP_USER', '')
         self.smtp_password = os.getenv('SMTP_PASSWORD', '')
         self.smtp_from = os.getenv('SMTP_FROM', '') or self.smtp_user
-        self.smtp_from_name = os.getenv('SMTP_FROM_NAME', '').strip()
         self.smtp_use_tls = os.getenv('SMTP_USE_TLS', 'true').lower() == 'true'
         self.smtp_use_ssl = os.getenv('SMTP_USE_SSL', 'false').lower() == 'true'
         
