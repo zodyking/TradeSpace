@@ -1,9 +1,11 @@
 # =============================================================================
-# QuantDinger — Dockploy / Dokploy (standalone compose file)
+# QuantDinger — Dokploy ONLY (do not merge with docker-compose.yml)
 # =============================================================================
-# In Dockploy → Compose path / file:  docker-compose.dockploy.yml
+# Dokploy UI:
+#   Compose file: docker-compose.dockploy.yml
+#   Environment:  DELETE variable COMPOSE_FILE if present
+#   Domains:       REMOVE all domains here (routing is in labels below)
 # Open: http://qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io
-# Do NOT use https:// on sslip.io. Turn HTTPS OFF in Dockploy Domains UI.
 # =============================================================================
 
 services:
@@ -24,7 +26,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - quantdinger-network
+      - dokploy-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-quantdinger} -d ${POSTGRES_DB:-quantdinger}"]
       interval: 10s
@@ -36,7 +38,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
     networks:
-      - quantdinger-network
+      - dokploy-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -65,44 +67,38 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CACHE_ENABLED=true
-      - FRONTEND_URL=${FRONTEND_URL:-http://qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io}
+      - FRONTEND_URL=http://qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io
       - ALLOW_LOCAL_DESKTOP_BROKERS=false
     networks:
-      - quantdinger-network
       - dokploy-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/brokermr810/quantdinger-frontend}:${FRONTEND_TAG:-${IMAGE_TAG:-latest}}
     pull_policy: always
     restart: unless-stopped
     depends_on:
-      backend:
-        condition: service_healthy
-    expose:
-      - "80"
-    environment:
-      - BACKEND_URL=http://backend:5000
+      - backend
     networks:
-      - quantdinger-network
       - dokploy-network
     labels:
       - traefik.enable=true
       - traefik.docker.network=dokploy-network
-      - traefik.http.routers.quantdinger-http.rule=Host(`qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io`)
-      - traefik.http.routers.quantdinger-http.entrypoints=web
-      - traefik.http.routers.quantdinger-http.service=quantdinger-http
-      - traefik.http.services.quantdinger-http.loadbalancer.server.port=80
+      - traefik.http.routers.qd-web.rule=Host(`qauntview-quantview-lwersl-74dba7-155-138-143-191.sslip.io`)
+      - traefik.http.routers.qd-web.entrypoints=web
+      - traefik.http.routers.qd-web.service=qd-web
+      - traefik.http.services.qd-web.loadbalancer.server.port=80
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 30s
 
 volumes:
   postgres_data:
@@ -110,7 +106,5 @@ volumes:
   backend_data:
 
 networks:
-  quantdinger-network:
-    driver: bridge
   dokploy-network:
     external: true
