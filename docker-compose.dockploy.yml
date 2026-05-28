@@ -1,9 +1,6 @@
-# Dockploy / Dokploy overlay — no host ports on DB/Redis/API (avoids 5432/6379/5000 conflicts).
-#
-# Set in Dockploy project env:
-#   COMPOSE_FILE=docker-compose.yml:docker-compose.dockploy.yml
-#
-# Domain UI: service frontend, container port 80, HTTPS off for *.sslip.io
+# Dockploy / Dokploy: do not publish DB/Redis/API on the host (fixes :5432 / :6379 conflicts).
+# Project env: COMPOSE_FILE=docker-compose.yml:docker-compose.dockploy.yml
+# Domain: service frontend, container port 80
 
 services:
   postgres:
@@ -22,8 +19,6 @@ services:
     ports: !reset []
     expose:
       - "80"
-    environment:
-      - BACKEND_URL=${BACKEND_URL:-http://backend:5000}
     networks:
       - quantdinger-network
       - dokploy-network
