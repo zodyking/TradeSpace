@@ -10,7 +10,7 @@ Recommended setup: single domain + host Nginx reverse proxy
 - Host Nginx: listens on `80/443`
 - Docker `frontend`: binds to `127.0.0.1:8888`
 - Docker `backend`: binds to `127.0.0.1:5000`
-- Docker `postgres`: binds to `127.0.0.1:5432`
+- Docker `postgres`: binds to `127.0.0.1:5433` (host; container port 5432)
 
 Benefits:
 
@@ -104,7 +104,7 @@ Recommended production values:
 ```ini
 FRONTEND_PORT=127.0.0.1:8888
 BACKEND_PORT=127.0.0.1:5000
-DB_PORT=127.0.0.1:5432
+DB_PORT=127.0.0.1:5433
 IMAGE_PREFIX=
 ```
 
@@ -112,7 +112,7 @@ Explanation:
 
 - `FRONTEND_PORT=127.0.0.1:8888`: only accessible locally, exposed through host Nginx
 - `BACKEND_PORT=127.0.0.1:5000`: avoid exposing API directly
-- `DB_PORT=127.0.0.1:5432`: avoid exposing PostgreSQL directly
+- `DB_PORT=127.0.0.1:5433`: loopback-only PostgreSQL; default host port avoids conflict with local Postgres on `5432`
 - `IMAGE_PREFIX=`: empty means official Docker Hub
 
 If image pulls fail, try:
@@ -145,7 +145,7 @@ At this point, services usually listen on:
 
 - `127.0.0.1:8888`
 - `127.0.0.1:5000`
-- `127.0.0.1:5432`
+- `127.0.0.1:5433`
 
 ## 7. Install and Configure Nginx
 
@@ -432,13 +432,10 @@ sudo nginx -t
 Recommended:
 
 ```ini
-DB_PORT=127.0.0.1:5432
+DB_PORT=127.0.0.1:5433
 ```
 
-Do not expose:
-
-- `5432`
-- `5000`
+Do not expose PostgreSQL or the API directly (keep `DB_PORT` / `BACKEND_PORT` on loopback, e.g. `127.0.0.1:5433` and `127.0.0.1:5000`).
 
 Publicly expose only:
 

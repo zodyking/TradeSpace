@@ -348,7 +348,7 @@ flowchart LR
 |------|------|
 | [Docker](https://docs.docker.com/get-docker/) + Compose v2 | 用于 Postgres、Redis、API 与静态站点。 |
 | `git` | 克隆本仓库。 |
-| 默认端口 | `8888`（Web）、`5000`（API，默认绑定 **127.0.0.1**）、`5432` / `6379`（数据库与 Redis，默认回环）。若冲突可在**仓库根目录** `.env` 中按 `docker-compose.yml` 调整。 |
+| 默认端口 | `8888`（Web）、`5000`（API，默认绑定 **127.0.0.1**）、`5433` / `6379`（数据库与 Redis，默认回环；Postgres 宿主机端口避开常见的 `5432` 占用）。若冲突可在**仓库根目录** `.env` 中按 `docker-compose.yml` 调整。 |
 | 磁盘 | 数据库卷会随用户、策略与日志增长，正式使用建议预留数 GB 以上。 |
 
 ### 1）克隆仓库

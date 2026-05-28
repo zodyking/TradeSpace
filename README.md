@@ -348,7 +348,7 @@ This section mirrors a typical “local deploy” path: **prepare the host → o
 |------|--------|
 | [Docker](https://docs.docker.com/get-docker/) + Docker Compose v2 | Used for Postgres, Redis, API, and static UI. |
 | `git` | To clone this repository. |
-| Ports (defaults) | `8888` (web), `5000` (API, bound to **127.0.0.1**), `5432` / `6379` (DB/Redis, loopback by default). Change via root `.env` if they collide. |
+| Ports (defaults) | `8888` (web), `5000` (API, bound to **127.0.0.1**), `5433` / `6379` (DB/Redis on loopback; Postgres host port avoids common `5432` conflicts). Change via root `.env` if they collide. |
 | Disk | Postgres volume grows with users, strategies, and logs; plan a few GB minimum for serious use. |
 
 ### 1) Clone the repository
@@ -475,7 +475,7 @@ If `py` is not on PATH, use `python` or `python3` in the one-liner that generate
 | `redis` / `python` / `node` pull fails, `content size of zero` | Docker Hub unreachable from Docker Desktop. Set root `.env` `IMAGE_PREFIX=docker.m.daocloud.io/library/` and/or configure **Docker Desktop → Proxies** (system VPN alone is often not enough). |
 | Backend exits immediately | `SECRET_KEY` still default, or invalid `.env` syntax. Read `docker compose logs backend`. |
 | Blank page or API errors from browser | `FRONTEND_URL` / origins mismatch; API not reachable from the host you opened. |
-| Port already in use | Another Postgres, Redis, or local service on `5432` / `6379` / `5000` / `8888`. Adjust variables in root `.env` per `docker-compose.yml`. |
+| Port already in use | Another Postgres, Redis, or local service on `5433` / `6379` / `5000` / `8888` (Postgres defaults to host `5433` to avoid local `5432`). Set `DB_PORT`, `REDIS_PORT`, etc. in root `.env` per `docker-compose.yml`. |
 | Many live strategies, “start denied” | Raise `STRATEGY_MAX_THREADS` in `backend_api_python/.env` and restart API (see comments in `env.example`). |
 
 ### Common Docker commands

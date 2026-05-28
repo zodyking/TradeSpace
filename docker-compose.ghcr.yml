@@ -53,7 +53,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${DB_PORT:-127.0.0.1:5432}:5432"
+      # Host port 5433 avoids conflict with a local PostgreSQL on 5432; override via DB_PORT in root .env
+      - "${DB_PORT:-127.0.0.1:5433}:5432"
     networks:
       - quantdinger-network
     healthcheck:

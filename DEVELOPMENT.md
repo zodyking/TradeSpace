@@ -33,7 +33,7 @@ The stack includes:
 |---------|------|-------------|
 | `frontend` | 8888 | Nginx serving Vue SPA |
 | `backend` | 5000 | Flask API (gunicorn) |
-| `postgres` | 5432 | PostgreSQL 16 |
+| `postgres` | 5433 (host) → 5432 (container) | PostgreSQL 16 |
 | `redis` | 6379 | Cache layer (LRU, 128 MB) |
 
 ## Project Structure

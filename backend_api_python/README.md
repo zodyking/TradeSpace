@@ -59,7 +59,7 @@ docker-compose up -d
 ```
 
 This will:
-- Start PostgreSQL database (port 5432)
+- Start PostgreSQL database (host port 5433 by default via root `.env` / `docker-compose.yml`; container port 5432)
 - Initialize database schema automatically
 - Start backend API (port 5000)
 - Start frontend (port 8888)

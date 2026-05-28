@@ -10,7 +10,7 @@
 - 宿主机 Nginx：监听 `80/443`
 - Docker `frontend`：绑定到 `127.0.0.1:8888`
 - Docker `backend`：绑定到 `127.0.0.1:5000`
-- Docker `postgres`：绑定到 `127.0.0.1:5432`
+- Docker `postgres`：绑定到 `127.0.0.1:5433`（宿主机；容器内仍为 5432）
 
 这样做的好处：
 
@@ -104,7 +104,7 @@ cp .env.example .env
 ```ini
 FRONTEND_PORT=127.0.0.1:8888
 BACKEND_PORT=127.0.0.1:5000
-DB_PORT=127.0.0.1:5432
+DB_PORT=127.0.0.1:5433
 IMAGE_PREFIX=
 ```
 
@@ -112,7 +112,7 @@ IMAGE_PREFIX=
 
 - `FRONTEND_PORT=127.0.0.1:8888`：只允许宿主机本地访问，由外层 Nginx 转发
 - `BACKEND_PORT=127.0.0.1:5000`：避免后端 API 直接暴露公网
-- `DB_PORT=127.0.0.1:5432`：避免数据库端口暴露公网
+- `DB_PORT=127.0.0.1:5433`：数据库仅回环访问；默认宿主机端口避开本机 PostgreSQL 占用的 `5432`
 - `IMAGE_PREFIX=`：空值表示官方 Docker Hub
 
 如果拉镜像失败，可改成：
@@ -145,7 +145,7 @@ docker-compose logs -f frontend
 
 - `127.0.0.1:8888`
 - `127.0.0.1:5000`
-- `127.0.0.1:5432`
+- `127.0.0.1:5433`
 
 ## 7. 安装并配置 Nginx
 
@@ -432,13 +432,10 @@ sudo nginx -t
 生产环境建议：
 
 ```ini
-DB_PORT=127.0.0.1:5432
+DB_PORT=127.0.0.1:5433
 ```
 
-不要开放：
-
-- `5432`
-- `5000`
+不要将 PostgreSQL 或后端 API 直接暴露公网（`DB_PORT` / `BACKEND_PORT` 保持回环，例如 `127.0.0.1:5433` 与 `127.0.0.1:5000`）。
 
 公网只开放：
 
