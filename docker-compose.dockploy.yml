@@ -1,6 +1,13 @@
-# Dockploy / Dokploy: do not publish DB/Redis/API on the host (fixes :5432 / :6379 conflicts).
-# Project env: COMPOSE_FILE=docker-compose.yml:docker-compose.dockploy.yml
-# Domain: service frontend, container port 80
+# Dockploy / Dokploy overlay
+#
+# Required project env:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.dockploy.yml
+#
+# Domain UI: service=frontend, container port=80, path=/
+# sslip.io: HTTPS OFF — open http://your-host.sslip.io (not https://)
+#
+# backend_api_python/.env:
+#   FRONTEND_URL=http://your-host.sslip.io
 
 services:
   postgres:
@@ -19,9 +26,16 @@ services:
     ports: !reset []
     expose:
       - "80"
+    environment:
+      - BACKEND_URL=${BACKEND_URL:-http://backend:5000}
     networks:
       - quantdinger-network
       - dokploy-network
+    labels:
+      - traefik.enable=true
+      # Traefik only watches dokploy-network; without this label → 404
+      - traefik.docker.network=dokploy-network
+      - traefik.http.services.quantdinger-fe.loadbalancer.server.port=80
 
 networks:
   dokploy-network:
