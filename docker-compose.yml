@@ -157,8 +157,7 @@ services:
     pull_policy: always
     container_name: quantdinger-frontend
     restart: unless-stopped
-    # Nginx listens on 80 inside the container. Host 8888 is for local access only.
-    # Dockploy domain UI: service frontend, container port 80 (not 8888). See docker-compose.dockploy.yml.
+    # Nginx listens on 80 in-container. Dockploy domain UI: service frontend, port 80 (not 8888).
     expose:
       - "80"
     ports:

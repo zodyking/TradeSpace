@@ -1,17 +1,9 @@
-# Dockploy / Dokploy overlay
+# Dockploy / Dokploy overlay — no host ports on DB/Redis/API (avoids 5432/6379/5000 conflicts).
 #
-# In Dockploy → Compose settings, set:
+# Set in Dockploy project env:
 #   COMPOSE_FILE=docker-compose.yml:docker-compose.dockploy.yml
-# Or deploy with:
-#   docker compose -f docker-compose.yml -f docker-compose.dockploy.yml up -d
-# GHCR-only stack:
-#   docker compose -f docker-compose.ghcr.yml -f docker-compose.dockploy.yml up -d
 #
-# Domain form (sslip.io or any host):
-#   Service: frontend | Container port: 80 | Path: / | HTTPS: off for sslip.io
-#
-# Set the same origin in backend_api_python/.env:
-#   FRONTEND_URL=http://<your-host>   (https:// only when TLS terminates in front)
+# Domain UI: service frontend, container port 80, HTTPS off for *.sslip.io
 
 services:
   postgres:
